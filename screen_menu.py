@@ -58,10 +58,6 @@ class MenuScreen:
     def draw(self, surface):
         surface.fill(BG_COLOR)
 
-        for x, y, r, alpha in self.stars:
-            c = int(alpha * 160)
-            pygame.draw.circle(surface, (c, c, c + 40), (x, y), r)
-
         # Título
         title = self.fonts["title"].render("Torre de Hanói", True, TEXT_WHITE)
         tr = title.get_rect(centerx=SCREEN_W // 2, y=60)
@@ -82,27 +78,31 @@ class MenuScreen:
         lr = label.get_rect(centerx=SCREEN_W // 2, y=215)
         surface.blit(label, lr)
 
-        # Mini info discos en cada botón
-        for (btn, diff) in self._diff_btns:
-            info = DIFICULTADES[diff]
-            # Fondo del botón con color de dificultad
-            draw_glow(surface, info["color"], btn.rect, 12, 30)
+        # Botones de dificultad — dibujamos manualmente sin usar btn.draw()
+        # para evitar que el texto del Button se superponga con el texto personalizado
+        diff_configs = [
+            (self.btn_facil,   "facil",   "Fácil",   SUCCESS,      "3 discos"),
+            (self.btn_medio,   "medio",   "Medio",   WARNING,      "5 discos"),
+            (self.btn_dificil, "dificil", "Difícil", ERROR_COLOR,  "7 discos"),
+        ]
 
-        self.btn_facil.draw(surface)
-        self.btn_medio.draw(surface)
-        self.btn_dificil.draw(surface)
+        for btn, diff, lbl, col, sub in diff_configs:
+            # Fondo del botón
+            bg = tuple(max(0, c - 80) for c in col)
+            hover_bg = tuple(max(0, c - 50) for c in col)
+            draw_glow(surface, col, btn.rect, 12, 25)
+            draw_rounded_rect(surface, hover_bg if btn.hovered else bg, btn.rect, 12)
+            draw_rounded_rect(surface, (0, 0, 0, 0), btn.rect, 12,
+                              border=2, border_color=col)
 
-        # Subtextos discos
-        sub_texts = [("3 discos", self.btn_facil), ("5 discos", self.btn_medio), ("7 discos", self.btn_dificil)]
-        diff_labels = [("Fácil", SUCCESS), ("Medio", WARNING), ("Difícil", ERROR_COLOR)]
-        for i, (btn, diff) in enumerate(self._diff_btns):
-            lbl, col = diff_labels[i]
+            # Texto de dificultad
             t = self.fonts["heading"].render(lbl, True, col)
-            tr2 = t.get_rect(centerx=btn.rect.centerx, y=btn.rect.y + 10)
+            tr2 = t.get_rect(centerx=btn.rect.centerx, y=btn.rect.y + 12)
             surface.blit(t, tr2)
-            disc_info = DIFICULTADES[diff]
-            t2 = self.fonts["small"].render(f"{disc_info['discos']} discos", True, TEXT_GRAY)
-            tr3 = t2.get_rect(centerx=btn.rect.centerx, y=btn.rect.y + 40)
+
+            # Subtexto de discos
+            t2 = self.fonts["small"].render(sub, True, TEXT_GRAY)
+            tr3 = t2.get_rect(centerx=btn.rect.centerx, y=btn.rect.y + 42)
             surface.blit(t2, tr3)
 
         # Separador

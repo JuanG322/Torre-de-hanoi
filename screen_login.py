@@ -20,16 +20,18 @@ class LoginScreen:
                                      "Nombre de usuario", fonts["body"])
         self.input_pass = InputField(panel_x + 40, 385, panel_w - 80, 52,
                                      "Contraseña", fonts["body"], password=True)
+        self.input_pass2 = InputField(panel_x + 40, 460, panel_w - 80, 52,
+                                      "Confirmar contraseña", fonts["body"], password=True)
 
-        self.btn_submit = Button(panel_x + 40, 465, panel_w - 80, 52,
+        self.btn_submit = Button(panel_x + 40, 540, panel_w - 80, 52,
                                  "Iniciar Sesión", PRIMARY_DARK, TEXT_WHITE,
                                  fonts["body"], radius=10)
 
-        self.btn_toggle = Button(panel_x + 40, 535, panel_w - 80, 44,
+        self.btn_toggle = Button(panel_x + 40, 610, panel_w - 80, 44,
                                  "¿No tienes cuenta? Regístrate",
                                  BG_PANEL, PRIMARY, fonts["small"], radius=10, outline=True)
 
-        self.panel_rect = pygame.Rect(panel_x, 240, panel_w, 360)
+        self.panel_rect = pygame.Rect(panel_x, 240, panel_w, 430)
         self.stars = self._make_stars()
 
     def _make_stars(self):
@@ -39,14 +41,32 @@ class LoginScreen:
 
     def set_mode(self, mode):
         self.mode = mode
+        cx = SCREEN_W // 2
+        panel_w = 480
+        panel_x = cx - panel_w // 2
+
         if mode == "login":
             self.btn_submit.text = "Iniciar Sesión"
             self.btn_toggle.text = "¿No tienes cuenta? Regístrate"
+            # En login: campos más arriba, sin confirmar contraseña visible
+            self.input_user.rect.y = 310
+            self.input_pass.rect.y = 385
+            self.btn_submit.rect.y = 465
+            self.btn_toggle.rect.y = 535
+            self.panel_rect.height = 360
         else:
             self.btn_submit.text = "Crear Cuenta"
             self.btn_toggle.text = "¿Ya tienes cuenta? Inicia Sesión"
+            # En register: campos más espaciados para incluir confirmar contraseña
+            self.input_user.rect.y = 310
+            self.input_pass.rect.y = 385
+            self.input_pass2.rect.y = 460
+            self.btn_submit.rect.y = 540
+            self.btn_toggle.rect.y = 610
+            self.panel_rect.height = 430
         self.input_user.text = ""
         self.input_pass.text = ""
+        self.input_pass2.text = ""
         self.message = ""
 
     def show_message(self, msg, color=None):
@@ -58,6 +78,8 @@ class LoginScreen:
         for event in events:
             self.input_user.handle_event(event)
             self.input_pass.handle_event(event)
+            if self.mode == "register":
+                self.input_pass2.handle_event(event)
 
             if self.btn_submit.handle_event(event):
                 return self._on_submit()
@@ -92,6 +114,9 @@ class LoginScreen:
             if len(pwd) < 3:
                 self.show_message("La contraseña debe tener al menos 3 caracteres")
                 return None
+            if pwd != self.input_pass2.text.strip():
+                self.show_message("Las contraseñas no coinciden")
+                return None
             ok, msg = registrar_usuario(user, pwd)
             if ok:
                 self.show_message("¡Registrado! Ahora inicia sesión", SUCCESS)
@@ -103,6 +128,7 @@ class LoginScreen:
     def update(self):
         self.input_user.update()
         self.input_pass.update()
+        self.input_pass2.update()
         self.btn_submit.update()
         self.btn_toggle.update()
         if self.message_timer > 0:
@@ -110,11 +136,6 @@ class LoginScreen:
 
     def draw(self, surface):
         surface.fill(BG_COLOR)
-
-        # Estrellas de fondo
-        for x, y, r, alpha in self.stars:
-            c = int(alpha * 180)
-            pygame.draw.circle(surface, (c, c, c + 30), (x, y), r)
 
         # Título
         title = self.fonts["title"].render("Torre de Hanói", True, TEXT_WHITE)
@@ -145,13 +166,18 @@ class LoginScreen:
 
         self.input_user.draw(surface)
         self.input_pass.draw(surface)
+
+        if self.mode == "register":
+            lbl_p2 = self.fonts["small"].render("Confirmar contraseña", True, TEXT_GRAY)
+            surface.blit(lbl_p2, (self.input_pass2.rect.x, self.input_pass2.rect.y - 22))
+            self.input_pass2.draw(surface)
+
         self.btn_submit.draw(surface)
         self.btn_toggle.draw(surface)
 
         # Mensaje
         if self.message and self.message_timer > 0:
-            alpha = min(255, self.message_timer * 3)
             msg_surf = self.fonts["small"].render(self.message, True, self.message_color)
             mr = msg_surf.get_rect(centerx=SCREEN_W // 2,
-                                   y=self.panel_rect.bottom - 28)
+                                   y=self.panel_rect.bottom - 30)
             surface.blit(msg_surf, mr)
