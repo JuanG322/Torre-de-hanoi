@@ -6,7 +6,6 @@ from database import guardar_resultado
 
 
 class HanoiGame:
-    """Lógica pura de la Torre de Hanói."""
     def __init__(self, num_discos):
         self.num_discos = num_discos
         # Cada torre es una lista de enteros (1=más pequeño, num_discos=más grande)
@@ -17,8 +16,6 @@ class HanoiGame:
         ]
 
     def mover(self, origen, destino):
-        """Intenta mover el disco superior de origen a destino.
-        Retorna True si el movimiento es válido, False si no."""
         if origen == destino:
             return False
         if not self.torres[origen]:
@@ -30,7 +27,6 @@ class HanoiGame:
         return True
 
     def esta_completo(self):
-        """El puzzle está completo cuando todos los discos están en la torre 2."""
         return len(self.torres[2]) == self.num_discos
 
 
@@ -47,17 +43,14 @@ class GameScreen:
         self.start_time = time.time()
         self.elapsed = 0
         self.completado = False
-        self.completion_timer = 0    # Segundos contados tras completar
+        self.completion_timer = 0    
 
-        # Animación de disco seleccionado
         self.anim_offset = 0
         self.anim_dir = -1
 
-        # Mensaje de error (movimiento inválido)
         self.error_msg = ""
         self.error_timer = 0
 
-        # Partícula de completado
         self.particles = []
 
         cx = SCREEN_W // 2
@@ -70,11 +63,9 @@ class GameScreen:
                                   "↺ Reiniciar", (30, 40, 30), ACCENT,
                                   fonts["body"], radius=10)
 
-        # Calcular geometría de discos
         self._calc_geometry()
 
     def _calc_geometry(self):
-        """Precalcula dimensiones de discos según cantidad."""
         self.disk_widths = []
         for i in range(1, self.num_discos + 1):
             # i=1 más pequeño, i=num_discos más grande
@@ -90,7 +81,6 @@ class GameScreen:
         return DISK_COLORS[idx]
 
     def _tower_hit(self, mx, my):
-        """Devuelve el índice de la torre clickeada (0,1,2) o -1."""
         for i, tx in enumerate(TOWER_XS):
             # Área de clic: base + columna
             base_rect = pygame.Rect(tx - BASE_W // 2, TOWER_Y - BASE_H,
@@ -138,7 +128,6 @@ class GameScreen:
 
     def _on_tower_click(self, torre):
         if self.torre_seleccionada is None:
-            # Primera selección
             if self.game.torres[torre]:
                 self.torre_seleccionada = torre
                 self.error_msg = ""
@@ -147,7 +136,6 @@ class GameScreen:
                 self.error_timer = 90
         else:
             if torre == self.torre_seleccionada:
-                # Deseleccionar
                 self.torre_seleccionada = None
                 return
             ok = self.game.mover(self.torre_seleccionada, torre)
@@ -186,7 +174,6 @@ class GameScreen:
         if not self.completado:
             self.elapsed = int(time.time() - self.start_time)
 
-        # Animación disco seleccionado
         self.anim_offset += self.anim_dir * 0.8
         if abs(self.anim_offset) > 8:
             self.anim_dir *= -1
@@ -194,17 +181,15 @@ class GameScreen:
         if self.error_timer > 0:
             self.error_timer -= 1
 
-        # Timer de completado -> volver al menú
         if self.completado and self.completion_timer > 0:
             self.completion_timer -= 1
             if self.completion_timer == 0:
                 return ("goto_menu",)
 
-        # Partículas
         for p in self.particles[:]:
             p[0] += p[2]
             p[1] += p[3]
-            p[3] += 0.15  # gravedad
+            p[3] += 0.15 
             p[5] -= 1
             if p[5] <= 0:
                 self.particles.remove(p)
@@ -214,32 +199,25 @@ class GameScreen:
     def draw(self, surface):
         surface.fill(BG_COLOR)
 
-        # Fondo sutil
         pygame.draw.rect(surface, BG_PANEL,
                          pygame.Rect(0, SCREEN_H - 160, SCREEN_W, 160))
         pygame.draw.line(surface, PANEL_BORDER,
                          (0, SCREEN_H - 160), (SCREEN_W, SCREEN_H - 160), 1)
 
-        # HUD Superior
         self._draw_hud(surface)
 
-        # Torres
         self._draw_towers(surface)
 
-        # Discos
         self._draw_disks(surface)
 
-        # Partículas
         for p in self.particles:
             alpha = int(255 * p[5] / p[6])
             r, g, b = p[4]
             pygame.draw.circle(surface, (r, g, b), (int(p[0]), int(p[1])), 5)
 
-        # Botones
         self.btn_menu.draw(surface)
         self.btn_restart.draw(surface)
 
-        # Mensaje error
         if self.error_msg and self.error_timer > 0:
             alpha_f = min(1.0, self.error_timer / 30)
             alpha = int(255 * alpha_f)
@@ -248,17 +226,14 @@ class GameScreen:
             er = err_surf.get_rect(centerx=SCREEN_W // 2, y=SCREEN_H - 130)
             surface.blit(err_surf, er)
 
-        # Pantalla de completado
         if self.completado:
             self._draw_completion(surface)
 
     def _draw_hud(self, surface):
-        # Dificultad
         diff_label = DIFICULTADES[self.dificultad]["label"]
         dt = self.fonts["heading"].render(f"Dificultad: {diff_label}", True, self.diff_color)
         surface.blit(dt, (30, 20))
 
-        # Tiempo
         secs = self.elapsed
         mins = secs // 60
         s = secs % 60
@@ -273,12 +248,10 @@ class GameScreen:
         tv_r = time_val.get_rect(centerx=SCREEN_W // 2, y=35)
         surface.blit(time_val, tv_r)
 
-        # Usuario
         user_t = self.fonts["small"].render(self.usuario["nombre_usuario"], True, TEXT_GRAY)
         user_r = user_t.get_rect(right=SCREEN_W - 30, y=20)
         surface.blit(user_t, user_r)
 
-        # Instrucciones
         if self.torre_seleccionada is not None:
             instr = f"Torre {self.torre_seleccionada + 1} seleccionada — Haz clic en la torre destino"
             ic = ACCENT
@@ -295,18 +268,15 @@ class GameScreen:
             color = ACCENT if selected else (50, 60, 90)
             border = ACCENT if selected else PANEL_BORDER
 
-            # Base
             base_rect = pygame.Rect(tx - BASE_W // 2, TOWER_Y - BASE_H, BASE_W, BASE_H)
             draw_rounded_rect(surface, color, base_rect, 6)
             if selected:
                 draw_glow(surface, ACCENT, base_rect, 6, 50)
 
-            # Palo
             pole_rect = pygame.Rect(tx - TOWER_W // 2, TOWER_Y - TOWER_H,
                                     TOWER_W, TOWER_H - BASE_H)
             draw_rounded_rect(surface, color, pole_rect, 4)
 
-            # Número de torre
             nt = self.fonts["small"].render(f"Torre {i + 1}", True,
                                              ACCENT if selected else TEXT_DIM)
             nr = nt.get_rect(centerx=tx, y=TOWER_Y + 10)
@@ -333,18 +303,15 @@ class GameScreen:
                     draw_glow(surface, color, rect, 8, 70)
 
                 draw_rounded_rect(surface, color, rect, 8)
-                # Highlight
                 highlight = tuple(min(255, c + 60) for c in color)
                 pygame.draw.rect(surface, highlight,
                                  pygame.Rect(dx + 6, dy + 3, dw - 12, 4),
                                  border_radius=2)
-                # Número del disco
                 dn = self.fonts["small"].render(str(disco), True, (0, 0, 0))
                 dr = dn.get_rect(center=rect.center)
                 surface.blit(dn, dr)
 
     def _draw_completion(self, surface):
-        # Overlay semitransparente
         overlay = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 160))
         surface.blit(overlay, (0, 0))
@@ -375,7 +342,6 @@ class GameScreen:
         t3r = t3.get_rect(centerx=cx, y=cy + 20)
         surface.blit(t3, t3r)
 
-        # Barra de progreso para el auto-cierre
         progress = self.completion_timer / 240
         bar_w = 400
         bar_rect = pygame.Rect(cx - bar_w // 2, cy + 80, int(bar_w * progress), 8)

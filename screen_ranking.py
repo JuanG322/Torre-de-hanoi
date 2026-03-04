@@ -54,7 +54,6 @@ class RankingScreen:
     def draw(self, surface):
         surface.fill(BG_COLOR)
 
-        # Título
         title = self.fonts["title"].render("Ranking Global", True, TEXT_WHITE)
         tr = title.get_rect(centerx=SCREEN_W // 2, y=60)
         surface.blit(title, tr)
@@ -63,7 +62,6 @@ class RankingScreen:
         sr = sub.get_rect(centerx=SCREEN_W // 2, y=118)
         surface.blit(sub, sr)
 
-        # Tabs
         for btn, diff in self._tab_btns:
             info = DIFICULTADES[diff]
             if diff == self.dificultad_activa:
@@ -81,14 +79,12 @@ class RankingScreen:
             tr2 = t.get_rect(center=btn.rect.center)
             surface.blit(t, tr2)
 
-        # Panel de ranking
         cx = SCREEN_W // 2
         panel = pygame.Rect(cx - 340, 225, 680, 380)
         draw_rounded_rect(surface, BG_PANEL, panel, 16)
         draw_rounded_rect(surface, (0, 0, 0, 0), panel, 16,
                          border=1, border_color=PANEL_BORDER)
 
-        # Header tabla
         header_y = panel.y + 20
         headers = [("Pos.", 80), ("Jugador", 320), ("Tiempo", 540)]
         for label, hx in headers:
@@ -120,12 +116,10 @@ class RankingScreen:
                     draw_rounded_rect(surface, (0, 0, 0, 0), row_rect, 8,
                                      border=1, border_color=tuple(c // 2 for c in diff_color))
 
-                # Posición
                 pos_text = f"#{i+1}"
                 pos_surf = self.fonts["heading"].render(pos_text, True, medal_colors[i])
                 surface.blit(pos_surf, (panel.x + 80, row_y))
 
-                # Nombre
                 nombre = row["nombre_usuario"]
                 if len(nombre) > 20:
                     nombre = nombre[:18] + "..."
@@ -133,7 +127,6 @@ class RankingScreen:
                                                     TEXT_WHITE if i == 0 else TEXT_GRAY)
                 surface.blit(n_surf, (panel.x + 180, row_y))
 
-                # Tiempo
                 secs = row["tiempo_segundos"]
                 mins = secs // 60
                 s = secs % 60
